@@ -15,7 +15,7 @@ const Values = () => {
               className="mx-auto h-48 w-48 rounded-full object-cover"
             />
             <h3 className="mt-6 text-xl font-medium text-gray-900">Empathy</h3>
-            <p className="mt-2 text-base text-gray-500">Understanding and sharing the feelings of our clients to provide better support.</p>
+            <p className="mt-2 text-base text-gray-500">We are passionate about understanding our client's experiences and perspectives.</p>
           </div>
           <div className="text-center">
             <img
@@ -33,7 +33,7 @@ const Values = () => {
               className="mx-auto h-48 w-48 rounded-full object-cover"
             />
             <h3 className="mt-6 text-xl font-medium text-gray-900">Person-Centered Care</h3>
-            <p className="mt-2 text-base text-gray-500">Tailoring our approach to meet individual needs and goals.</p>
+            <p className="mt-2 text-base text-gray-500">Tailoring our approach to provide meaningful, heartfelt support that makes a lasting difference.</p>
           </div>
         </div>
       </div>

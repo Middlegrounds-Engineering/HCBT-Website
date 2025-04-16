@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Mail, Phone, MapPin } from 'lucide-react';
 import { CONTACT } from '../constants/contact';
 import ServiceAreaMap from '../components/Map/ServiceAreaMap';
@@ -16,6 +16,10 @@ const locations = [
 ];
 
 const ContactPage = () => {
+  useEffect(() => {
+    document.title = 'Contact | Heart-Centered';
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

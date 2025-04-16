@@ -9,7 +9,7 @@ import { useToast } from '../common/Toast/ToastContext';
 interface FormData {
   // Participant Info
   participantName: string;
-  dateOfBirth: string;
+  dateOfBirth: string | null;
   ndisNumber: string;
   address: string;
   
@@ -27,8 +27,8 @@ interface FormData {
   funding: 'self' | 'plan' | 'ndia' | '';
   planManager: string;
   serviceAgreementEmail: string;
-  planStartDate: string;
-  planEndDate: string;
+  planStartDate: string | null;
+  planEndDate: string | null;
   hoursAvailable: string;
   
   // Referrer Info
@@ -45,7 +45,7 @@ const ReferralForm = () => {
   const [formData, setFormData] = useState<FormData>({
     // Participant Info
     participantName: '',
-    dateOfBirth: '',
+    dateOfBirth: null,
     ndisNumber: '',
     address: '',
     
@@ -63,8 +63,8 @@ const ReferralForm = () => {
     funding: '',
     planManager: '',
     serviceAgreementEmail: '',
-    planStartDate: '',
-    planEndDate: '',
+    planStartDate: null,
+    planEndDate: null,
     hoursAvailable: '',
     
     // Referrer Info
@@ -81,12 +81,17 @@ const ReferralForm = () => {
     try {
       const formDataToSend = new FormData();
       
-      // Append all form data
+      // Process form data before sending
       Object.entries(formData).forEach(([key, value]) => {
         if (key === 'services') {
           formDataToSend.append(key, JSON.stringify(value));
+        } else if (key === 'ndisDocument' && value instanceof File) {
+          formDataToSend.append(key, value);
         } else if (value !== null && value !== undefined) {
-          formDataToSend.append(key, value.toString());
+          // Only append non-null values
+          if (value !== '') {
+            formDataToSend.append(key, value.toString());
+          }
         }
       });
 
@@ -111,7 +116,7 @@ const ReferralForm = () => {
       // Reset form
       setFormData({
         participantName: '',
-        dateOfBirth: '',
+        dateOfBirth: null,
         ndisNumber: '',
         address: '',
         guardianName: '',
@@ -123,8 +128,8 @@ const ReferralForm = () => {
         funding: '',
         planManager: '',
         serviceAgreementEmail: '',
-        planStartDate: '',
-        planEndDate: '',
+        planStartDate: null,
+        planEndDate: null,
         hoursAvailable: '',
         referrerName: '',
         referrerRelationship: '',
@@ -140,7 +145,19 @@ const ReferralForm = () => {
   };
 
   const handleChange = (section: keyof FormData, data: Partial<FormData>) => {
-    setFormData(prev => ({ ...prev, ...data }));
+    const processedData: Partial<FormData> = {};
+    
+    // Process the incoming data
+    Object.entries(data).forEach(([key, value]) => {
+      // Handle date fields specifically
+      if (['dateOfBirth', 'planStartDate', 'planEndDate'].includes(key)) {
+        processedData[key] = value === '' ? null : value;
+      } else {
+        processedData[key] = value;
+      }
+    });
+
+    setFormData(prev => ({ ...prev, ...processedData }));
   };
 
   return (
@@ -150,26 +167,45 @@ const ReferralForm = () => {
           <h2 className="text-2xl font-bold text-gray-900 mb-8">Referral form</h2>
           
           <form onSubmit={handleSubmit} className="space-y-8">
-            <ParticipantInfo 
-              data={formData} 
-              onChange={(data) => handleChange('participantName', data)} 
-            />
-            <GuardianInfo 
-              data={formData} 
-              onChange={(data) => handleChange('guardianName', data)} 
-            />
-            <ServiceInfo 
-              data={formData} 
-              onChange={(data) => handleChange('services', data)} 
-            />
-            <NDISPlanInfo
-              data={formData}
-              onChange={(data) => handleChange('funding', data)}
-            />
-            <ReferrerInfo
-              data={formData}
-              onChange={(data) => handleChange('referrerName', data)}
-            />
+            {/* 1. Participant Information */}
+            <div className="bg-gray-50 p-6 rounded-lg">
+              <ParticipantInfo 
+                data={formData} 
+                onChange={(data) => handleChange('participantName', data)} 
+              />
+            </div>
+
+            {/* 2. Guardian Information */}
+            <div className="bg-gray-50 p-6 rounded-lg">
+              <GuardianInfo 
+                data={formData} 
+                onChange={(data) => handleChange('guardianName', data)} 
+              />
+            </div>
+
+            {/* 3. NDIS Plan Information */}
+            <div className="bg-gray-50 p-6 rounded-lg">
+              <NDISPlanInfo
+                data={formData}
+                onChange={(data) => handleChange('funding', data)}
+              />
+            </div>
+
+            {/* 4. Service Requirements */}
+            <div className="bg-gray-50 p-6 rounded-lg">
+              <ServiceInfo 
+                data={formData} 
+                onChange={(data) => handleChange('services', data)} 
+              />
+            </div>
+
+            {/* 5. Referrer Information */}
+            <div className="bg-gray-50 p-6 rounded-lg">
+              <ReferrerInfo
+                data={formData}
+                onChange={(data) => handleChange('referrerName', data)}
+              />
+            </div>
             
             <div className="pt-6">
               <button

@@ -9,6 +9,20 @@ const resendApiKey = Deno.env.get('RESEND_API_KEY')!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 const resend = new Resend(resendApiKey);
 
+// Helper function to convert array buffer to base64
+async function arrayBufferToBase64(buffer: ArrayBuffer): Promise<string> {
+  const chunks: string[] = [];
+  const chunk_size = 8192; // Process in 8KB chunks
+  const uint8Array = new Uint8Array(buffer);
+  
+  for (let i = 0; i < uint8Array.length; i += chunk_size) {
+    const chunk = uint8Array.slice(i, i + chunk_size);
+    chunks.push(String.fromCharCode.apply(null, chunk as unknown as number[]));
+  }
+  
+  return btoa(chunks.join(''));
+}
+
 Deno.serve(async (req) => {
   // Handle CORS
   if (req.method === 'OPTIONS') {
@@ -17,7 +31,43 @@ Deno.serve(async (req) => {
 
   try {
     const formData = await req.formData();
-    console.log("Form Data:", Object.fromEntries(formData)); // Log the form data
+    
+    // Handle file upload
+    let ndisDocumentPath = null;
+    let fileAttachment = null;
+    const ndisDocument = formData.get('ndisDocument') as File | null;
+    
+    if (ndisDocument) {
+      try {
+        // Read the file content
+        const arrayBuffer = await ndisDocument.arrayBuffer();
+        const base64Content = await arrayBufferToBase64(arrayBuffer);
+        
+        fileAttachment = {
+          filename: ndisDocument.name,
+          content: base64Content
+        };
+
+        // Store file path for database record
+        const fileExt = ndisDocument.name.split('.').pop();
+        const fileName = `${crypto.randomUUID()}.${fileExt}`;
+        ndisDocumentPath = `referrals/${fileName}`;
+
+        // Upload file to Supabase Storage
+        const { error: uploadError } = await supabase
+          .storage
+          .from('ndis_documents')
+          .upload(ndisDocumentPath, arrayBuffer);
+
+        if (uploadError) {
+          console.error('File upload error:', uploadError);
+          throw new Error(`Failed to upload file: ${uploadError.message}`);
+        }
+      } catch (fileError) {
+        console.error('File processing error:', fileError);
+        throw new Error(`Failed to process file: ${fileError.message}`);
+      }
+    }
     
     // Extract data from form
     const referralData = {
@@ -41,9 +91,8 @@ Deno.serve(async (req) => {
       referrer_relationship: formData.get('referrerRelationship'),
       referrer_email: formData.get('referrerEmail'),
       referrer_phone: formData.get('referrerPhone'),
+      ndis_document_path: ndisDocumentPath,
     };
-
-    console.log("Processed referral data:", referralData); // Log processed data
 
     // Insert referral into database
     const { data: savedReferral, error: dbError } = await supabase
@@ -57,10 +106,8 @@ Deno.serve(async (req) => {
       throw new Error(`Database insertion failed: ${dbError.message}`);
     }
 
-    console.log("Database insertion successful:", savedReferral); // Log successful insertion
-
-    // Send notification email
-    const { data: emailData, error: emailError } = await resend.emails.send({
+    // Prepare email data
+    const emailOptions = {
       from: 'HCBT Referrals <referrals@hcbt.com.au>',
       to: ['info@hcbt.com.au'],
       subject: `New Referral: ${referralData.participant_name}`,
@@ -99,20 +146,31 @@ Deno.serve(async (req) => {
         <p><strong>Email:</strong> ${referralData.referrer_email}</p>
         <p><strong>Phone:</strong> ${referralData.referrer_phone}</p>
       `
-    });
+    };
+
+    // Add attachment if file was uploaded
+    if (fileAttachment) {
+      emailOptions.attachments = [{
+        filename: fileAttachment.filename,
+        content: fileAttachment.content,
+        encoding: 'base64'
+      }];
+    }
+
+    // Send email
+    const { data: emailData, error: emailError } = await resend.emails.send(emailOptions);
 
     if (emailError) {
       console.error('Error sending email:', emailError);
       throw new Error(`Failed to send notification email: ${emailError.message}`);
     }
 
-    console.log("Email sent successfully:", emailData); // Log successful email sending
-
     return new Response(
       JSON.stringify({ 
         message: 'Referral submitted successfully', 
         data: savedReferral,
-        emailSent: true 
+        emailSent: true,
+        fileUploaded: !!ndisDocumentPath
       }),
       {
         headers: {

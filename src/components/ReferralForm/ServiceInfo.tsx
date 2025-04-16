@@ -3,7 +3,6 @@ import React from 'react';
 const services = [
   'Positive Behaviour Support',
   'NDIS Report (15 hours)',
-  'Diagnostic Assessment (DSM-5)',
   'Behaviour Assessment Report',
   'Therapeutic Services'
 ];

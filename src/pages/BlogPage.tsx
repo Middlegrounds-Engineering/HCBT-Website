@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import BlogList from '../components/Blog/BlogList';
 import BlogPost from '../components/Blog/BlogPost';
@@ -11,6 +11,10 @@ import { useAdminAuth } from '../hooks/useAdminAuth';
 const BlogPage = () => {
   const [showAdminForm, setShowAdminForm] = useState(false);
   const { isAdmin, loading, error } = useAdminAuth();
+
+  useEffect(() => {
+    document.title = 'Blog | Heart-Centered';
+  }, []);
 
   if (loading) {
     return <LoadingSpinner />;

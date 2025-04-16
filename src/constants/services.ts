@@ -1,9 +1,9 @@
-import { Brain, Heart, Users, ClipboardCheck, BookOpen, Shield } from 'lucide-react';
+import { Brain, Heart, ClipboardCheck, BookOpen, Shield } from 'lucide-react';
 
 export const SERVICES = [
   {
     title: 'Positive Behaviour Therapy',
-    description: 'A comprehensive approach to assessment, planning and intervention that focuses on improving quality of life and addressing behavioural concerns.',
+    description: 'Evidence-based approaches to develop and implement positive behaviour support strategies tailored to individual needs.',
     icon: Heart,
     features: [
       'Behaviour assessment and planning',
@@ -21,17 +21,6 @@ export const SERVICES = [
       'Positive behaviour support plans',
       'Crisis prevention and management',
       'Progress monitoring'
-    ]
-  },
-  {
-    title: 'Psychosocial Therapy',
-    description: 'Supporting emotional wellbeing and social skills development through therapeutic interventions.',
-    icon: Users,
-    features: [
-      'Social skills development',
-      'Emotional regulation',
-      'Relationship building',
-      'Coping strategies'
     ]
   },
   {
@@ -70,14 +59,6 @@ export const SERVICES = [
 ] as const;
 
 export const ASSESSMENTS = [
-  {
-    title: 'Diagnostic Assessment',
-    description: 'Comprehensive evaluation to identify specific conditions and support needs.'
-  },
-  {
-    title: 'Cognitive Assessment',
-    description: 'Evaluation of cognitive functions, learning styles, and processing abilities.'
-  },
   {
     title: 'Behaviour Assessment',
     description: 'Detailed analysis of behaviour patterns, triggers, and functions.'
